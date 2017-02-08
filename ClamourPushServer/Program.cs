@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.API.Gateway;
@@ -47,14 +44,14 @@ namespace ClamourPushServer
             };
 
             // Hook into the MessageReceived event on DiscordSocketClient
-            client.MessageReceived += (message) =>
+            client.MessageReceived += message =>
             {
                 if (message.Author.Id == this.client.CurrentUser.Id) return Task.CompletedTask;
 
                 bool shouldSendMessage = false;
                 if (message.Channel is IGuildChannel)
                 {
-                    var channel = message.Channel as IGuildChannel;
+                    var channel = (IGuildChannel)message.Channel;
                     var guild = userGuildSettings.Where(x => x.IsMobilePushEnabled && !x.IsMuted && x.GuildId != null).FirstOrDefault(y => y.GuildId == channel.GuildId);
                     if (guild != null)
                     {
@@ -89,6 +86,7 @@ namespace ClamourPushServer
 
                 if (shouldSendMessage)
                 {
+                    // Just use a random default URL for the moment
                     SendNotificationAsync(message.Author.Username + " (#" + message.Channel.Name + ")", message.Author.AvatarUrl ?? "https://discordapp.com/assets/1cbd08c76f8af6dddce02c5138971129.png", message.Content, client.CurrentUser.Id);
                 }
 
@@ -126,7 +124,7 @@ namespace ClamourPushServer
 
         private static async void SendNotificationAsync(string title, string avatarUrl, string text, ulong userId)
         {
-            NotificationHubClient hub = NotificationHubClient.CreateClientFromConnectionString("Insert listen azure endpoint here", "Clamour");
+            NotificationHubClient hub = NotificationHubClient.CreateClientFromConnectionString("Insert azure endpoint here", "Clamour");
 
             ToastVisual visual = new ToastVisual()
             {
